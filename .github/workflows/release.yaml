@@ -32,11 +32,12 @@ jobs:
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v7
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
       - uses: bazel-contrib/setup-bazel@0.19.1
         with:
           bazelisk-cache: true
           repository-cache: true
-          disk-cache: release-${{ matrix.platform }}
       - name: Build
         # Flang and MLIR translation units need 2-3 GB of memory each.
         run: bazel build --jobs=4 //:${{ matrix.platform }}

@@ -9,9 +9,15 @@ module(name = "flang_prebuilt")
 bazel_dep(name = "llvm", version = "0.8.24")
 bazel_dep(name = "tar.bzl", version = "0.10.4")
 
-# Needs a hermetic-llvm with `llvm.configure(flang = ...)`. Until one is
-# released, add a git_override() here or build with
-# --override_module=llvm=<path to such a checkout>.
+# Needs a hermetic-llvm with `llvm.configure(flang = ...)`, which no release
+# has yet: use a branch that adds it (hermetic-llvm main plus that change).
+# Local builds can use --override_module=llvm=<checkout> instead.
+git_override(
+    module_name = "llvm",
+    commit = "bb1ed5e185d7735e7847ca80021e25c6010f3fbb",
+    remote = "https://github.com/wep21/hermetic-llvm.git",
+)
+
 llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
 llvm.configure(flang = True)
 use_repo(llvm, "llvm-project")

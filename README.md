@@ -2,9 +2,12 @@
 
 Static, self-contained [LLVM Flang](https://flang.llvm.org) drivers, built
 from source with the [hermetic-llvm](https://github.com/hermeticbuild/hermetic-llvm)
-toolchain and published as GitHub releases. They are what
-[rules_ft](https://github.com/wep21/rules_ft) uses to compile Fortran under
-Bazel, the way rules_qemu uses qemu-prebuilt.
+toolchain and published as GitHub releases. They are what rules_ft (Bazel
+rules for Fortran on top of hermetic-llvm, not published yet) uses to compile
+Fortran, the way rules_qemu uses qemu-prebuilt.
+
+> **Experimental.** This repository is a trial of building Flang on standard
+> GitHub runners; see [Status](#status).
 
 The official LLVM release archives ship Flang only inside the full LLVM
 distribution (~2 GB), dynamically linked against the host's glibc, libstdc++
@@ -30,8 +33,9 @@ builds them for the target platform.
 This is a Bazel module that builds the upstream Bazel overlay's
 `@llvm-project//flang/tools/flang-driver:flang` with hermetic-llvm (`-c opt`,
 then `llvm-strip --strip-all`). It asks hermetic-llvm for the Flang sources with
-`llvm.configure(flang = True)`; until a hermetic-llvm release has that option,
-point it at a checkout that does:
+`llvm.configure(flang = True)`, which no hermetic-llvm release has yet, so
+`MODULE.bazel` pins a hermetic-llvm commit that adds it (`git_override`). To
+build against a local checkout instead:
 
 ```sh
 echo "common --override_module=llvm=$HOME/src/hermetic-llvm" >> user.bazelrc
