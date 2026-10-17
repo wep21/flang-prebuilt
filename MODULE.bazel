@@ -1,0 +1,19 @@
+"""Static, self-contained Flang drivers built with hermetic-llvm.
+
+Release archives are consumed by rules_ft. This module is not meant to be a
+dependency of other modules.
+"""
+
+module(name = "flang_prebuilt")
+
+bazel_dep(name = "llvm", version = "0.8.24")
+bazel_dep(name = "tar.bzl", version = "0.10.4")
+
+# Needs a hermetic-llvm with `llvm.configure(flang = ...)`. Until one is
+# released, add a git_override() here or build with
+# --override_module=llvm=<path to such a checkout>.
+llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
+llvm.configure(flang = True)
+use_repo(llvm, "llvm-project")
+
+register_toolchains("@llvm//toolchain:all")

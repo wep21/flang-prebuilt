@@ -1,0 +1,16 @@
+load(":flang_release.bzl", "flang_release")
+
+# Linux drivers are linked statically against musl and run on any Linux
+# distribution.
+[
+    flang_release(
+        name = name,
+        platform = platform,
+    )
+    for name, platform in [
+        ("darwin-amd64", "@llvm//platforms:macos_x86_64"),
+        ("darwin-arm64", "@llvm//platforms:macos_aarch64"),
+        ("linux-amd64", "@llvm//platforms:linux_x86_64_musl"),
+        ("linux-arm64", "@llvm//platforms:linux_aarch64_musl"),
+    ]
+]

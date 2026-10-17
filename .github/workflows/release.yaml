@@ -1,0 +1,80 @@
+# Builds the Flang driver archives and publishes them as a GitHub release.
+# Push a tag equal to VERSION in version.bzl (e.g. 23.1.2.1).
+name: release
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Release tag to publish; must match VERSION in version.bzl
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref_name }}
+
+jobs:
+  build:
+    name: build (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # One job per archive: each builds LLVM, MLIR and Flang from source
+        # (~10k actions), which takes hours on a standard 4-core runner.
+        platform: [darwin-amd64, darwin-arm64, linux-amd64, linux-arm64]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+      - uses: bazel-contrib/setup-bazel@0.19.1
+        with:
+          bazelisk-cache: true
+          repository-cache: true
+          disk-cache: release-${{ matrix.platform }}
+      - name: Build
+        # Flang and MLIR translation units need 2-3 GB of memory each.
+        run: bazel build --jobs=4 //:${{ matrix.platform }}
+      - name: Check the tag
+        run: |
+          archive="bazel-bin/flang-${{ matrix.platform }}-${TAG}.tar.zst"
+          if [[ ! -f "${archive}" ]]; then
+            echo "::error::${archive} not built; does the tag match VERSION in version.bzl?"
+            ls bazel-bin/flang-*.tar.zst
+            exit 1
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ matrix.platform }}
+          path: bazel-bin/flang-${{ matrix.platform }}-${{ env.TAG }}.tar.zst
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: release
+          merge-multiple: true
+      - name: Checksums
+        working-directory: release
+        run: for f in *.tar.zst; do sha256sum "$f" | tee "$f.sha256"; done
+      - uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4
+        with:
+          subject-path: release/*.tar.zst
+      - uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
+        with:
+          tag_name: ${{ env.TAG }}
+          files: |
+            release/*.tar.zst
+            release/*.sha256
