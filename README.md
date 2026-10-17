@@ -20,8 +20,11 @@ driver:
 | `flang-linux-arm64-<version>.tar.zst` | Linux aarch64, any distribution (static, musl) |
 | `flang-darwin-arm64-<version>.tar.zst` | macOS arm64 |
 | `flang-darwin-amd64-<version>.tar.zst` | macOS x86_64 |
+| `flang-windows-amd64-<version>.tar.zst` | Windows x86_64 (MinGW-w64 ABI) |
+| `flang-windows-arm64-<version>.tar.zst` | Windows arm64 (MinGW-w64 ABI) |
 
-Each holds `flang-<os>-<arch>-<version>/bin/flang` and LLVM's `LICENSE.TXT`,
+Each holds `flang-<os>-<arch>-<version>/bin/flang` (`flang.exe` on Windows)
+and LLVM's `LICENSE.TXT`,
 and comes with a `<archive>.sha256` file and a GitHub build attestation.
 `<version>` is `<LLVM version>.<serial>`, e.g. `23.1.2.1`. The driver targets
 every architecture LLVM was built for; pass `--target=`. Fortran runtimes and

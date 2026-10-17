@@ -27,7 +27,7 @@ jobs:
       matrix:
         # One job per archive: each builds LLVM, MLIR and Flang from source
         # (~10k actions), which takes hours on a standard 4-core runner.
-        platform: [darwin-amd64, darwin-arm64, linux-amd64, linux-arm64]
+        platform: [darwin-amd64, darwin-arm64, linux-amd64, linux-arm64, windows-amd64, windows-arm64]
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:

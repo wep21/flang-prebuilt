@@ -23,7 +23,7 @@ def _flang_for_platform_impl(ctx):
     # (--stripopt=--strip-all); the cc_binary's .stripped output only drops
     # debug info. Stripping here keeps the build configuration, and with it
     # the compiled LLVM, independent of strip options.
-    out = ctx.actions.declare_file(ctx.label.name + "/flang")
+    out = ctx.actions.declare_file(ctx.label.name + "/" + ctx.file.flang.basename)
     ctx.actions.run(
         executable = ctx.executable._strip,
         arguments = ["--strip-all", ctx.file.flang.path, "-o", out.path],
@@ -53,8 +53,9 @@ _flang_for_platform = rule(
 
 def _mtree_impl(ctx):
     lines = [
-        "{}/bin/flang uid=0 gid=0 time=1672560000 mode=0755 type=file content={}".format(
+        "{}/bin/{} uid=0 gid=0 time=1672560000 mode=0755 type=file content={}".format(
             ctx.attr.prefix,
+            ctx.file.flang.basename,
             ctx.file.flang.path,
         ),
     ] + [
@@ -81,7 +82,8 @@ _mtree = rule(
 def flang_release(name, platform):
     """Declares `flang-<name>-<VERSION>.tar.zst` for one execution platform.
 
-    The archive holds `flang-<name>-<VERSION>/bin/flang` and LLVM's license.
+    The archive holds `flang-<name>-<VERSION>/bin/flang` (`flang.exe` on
+    Windows) and LLVM's license.
 
     Args:
       name: `<os>-<arch>` of the archive, e.g. `linux-amd64`.
